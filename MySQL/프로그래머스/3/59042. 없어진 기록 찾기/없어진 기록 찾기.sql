@@ -1,7 +1,6 @@
--- 코드를 입력하세요
-SELECT O.ANIMAL_ID, O.NAME
-FROM ANIMAL_INS I
-RIGHT JOIN ANIMAL_OUTS O
-ON I.ANIMAL_ID=O.ANIMAL_ID
-WHERE I.ANIMAL_ID IS NULL
-ORDER BY O.ANIMAL_ID
+select o.animal_id, o.name
+from animal_ins i
+right join animal_outs o
+on i.animal_id=o.animal_id
+where intake_condition is null
+order by o.animal_id
