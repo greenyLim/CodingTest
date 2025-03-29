@@ -1,9 +1,10 @@
 -- 코드를 입력하세요
-SELECT b.flavor
-from first_half a
-right join july b
-on a.flavor = b.flavor and a.shipment_id=b.shipment_id
+with july_group as (select flavor, sum(total_order) as total
+                   from july
+                   group by flavor)
 
-group by b.flavor
-order by a.total_order+sum(b.total_order) desc
+SELECT f.flavor
+from first_half f
+join july_group j on f.flavor=j.flavor
+order by (f.total_order + j.total) desc
 limit 3
