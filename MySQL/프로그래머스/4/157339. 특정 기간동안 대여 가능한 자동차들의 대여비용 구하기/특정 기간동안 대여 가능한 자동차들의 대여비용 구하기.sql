@@ -1,24 +1,22 @@
--- 코드를 입력하세요
-SELECT C.CAR_ID, NP.CAR_TYPE, 
-round((daily_fee * 30 * (100 - CAST(replace(discount_rate, '%', '') AS unsigned))) / 100,0)  AS FEE
-FROM CAR_RENTAL_COMPANY_CAR C
-         JOIN (SELECT car_id,
-                      COUNT(
-                              CASE
-                                  WHEN start_date > '2022-11-30' 
-                          OR end_date <'2022-11-01'
-                                      THEN NULL
-                                  ELSE 1
-                                  END) AS temp
-               FROM car_rental_company_rental_history
-               GROUP BY car_id
-               HAVING temp = 0) N 
-               ON C.car_id = N.car_id
-         JOIN (SELECT *
-               FROM car_rental_company_discount_plan P
-               WHERE DURATION_TYPE LIKE '30%') NP
-               ON C.CAR_TYPE=NP.CAR_TYPE
-               
-WHERE NP.CAR_TYPE='SUV' OR  NP.CAR_TYPE='세단'
-having 500000 <= FEE AND  FEE <= 2000000
-ORDER BY FEE DESC, CAR_TYPE ASC, CAR_ID DESC
+with thirty as(select car_type, discount_rate
+              from CAR_RENTAL_COMPANY_DISCOUNT_PLAN
+              where duration_type='30일 이상' and car_type In ('세단','SUV'))
+
+
+select distinct(a.car_id), a.car_type, 
+round((100-(cast(replace(c.discount_rate, '%','') as signed)))/100*30*a.daily_fee,0)
+ as fee
+from car_rental_company_car a
+left join car_rental_company_rental_history b on a.car_id=b.car_id
+join thirty c on a.car_type=c.car_type
+where a.car_id NOT IN (
+    SELECT car_id
+    FROM car_rental_company_rental_history
+    WHERE start_date <= '2022-11-30'
+      AND end_date >= '2022-11-01'
+)
+and (100-(cast(replace(c.discount_rate, '%','') as signed)))/100*30*a.daily_fee >= 500000
+  and (100-(cast(replace(c.discount_rate, '%','') as signed)))/100*30*a.daily_fee < 2000000
+
+  
+order by fee desc, a.car_type, a.car_id desc
